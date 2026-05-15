@@ -1,0 +1,80 @@
+/* TABLE CONTAINER */
+
+.table-container {
+  width: 100%;
+
+  overflow-x: auto;
+
+  margin-top: 20px;
+
+  border-radius: 18px;
+}
+
+
+/* TABLE */
+
+table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  overflow: hidden;
+
+  background: white;
+
+  border-radius: 18px;
+}
+
+
+/* HEADER */
+
+th {
+  background: #2563eb;
+
+  color: white;
+
+  padding: 16px;
+
+  text-align: center;
+
+  font-size: 17px;
+
+  font-weight: 600;
+}
+
+
+/* TABLE DATA */
+
+td {
+  padding: 14px;
+
+  text-align: center;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  color: #334155;
+
+  font-size: 16px;
+
+  max-width: 180px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+
+/* ROW HOVER */
+
+tr:hover {
+  background: #f8fafc;
+}
+
+
+/* LAST ROW */
+
+tr:last-child td {
+  border-bottom: none;
+}
