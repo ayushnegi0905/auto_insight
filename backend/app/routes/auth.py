@@ -1,15 +1,19 @@
 from fastapi import APIRouter
+from fastapi import Depends
+
 from pydantic import BaseModel
 
 from sqlalchemy.orm import Session
 
-from app.db.database import SessionLocal
+from app.db.database import get_db
 from app.db.models import User
 
 from passlib.context import CryptContext
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
 
 router = APIRouter()
 
@@ -33,11 +37,10 @@ class LoginRequest(BaseModel):
 # ---------------- REGISTER ----------------
 
 @router.post("/register")
-def register(request: RegisterRequest):
-
-    db: Session = SessionLocal()
-
-    # CHECK EXISTING USER
+def register(
+    request: RegisterRequest,
+    db: Session = Depends(get_db)
+):
 
     existing_user = db.query(User).filter(
         User.username == request.username
@@ -49,11 +52,9 @@ def register(request: RegisterRequest):
             "message": "Username already exists"
         }
 
-    # HASH PASSWORD
-
-    hashed_password = pwd_context.hash(request.password)
-
-    # CREATE USER
+    hashed_password = pwd_context.hash(
+        request.password
+    )
 
     new_user = User(
         username=request.username,
@@ -64,6 +65,8 @@ def register(request: RegisterRequest):
 
     db.commit()
 
+    db.refresh(new_user)
+
     return {
         "message": "User registered successfully"
     }
@@ -72,9 +75,10 @@ def register(request: RegisterRequest):
 # ---------------- LOGIN ----------------
 
 @router.post("/login")
-def login(request: LoginRequest):
-
-    db: Session = SessionLocal()
+def login(
+    request: LoginRequest,
+    db: Session = Depends(get_db)
+):
 
     user = db.query(User).filter(
         User.username == request.username
@@ -86,9 +90,11 @@ def login(request: LoginRequest):
             "message": "User not found"
         }
 
-    # VERIFY PASSWORD
+    valid_password = pwd_context.verify(
+        request.password,
+        user.password
+    )
 
-    valid_password = pwd_context.verify(request.password, user.password)
     if not valid_password:
 
         return {

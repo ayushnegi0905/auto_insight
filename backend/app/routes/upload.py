@@ -5,6 +5,14 @@ import pandas as pd
 
 from app.services.cleaning import clean_data
 
+from app.db.models import History
+from datetime import datetime
+
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+from app.db.database import get_db
+
 router = APIRouter()
 
 # Store uploaded dataframe globally
@@ -13,19 +21,22 @@ global_df = None
 # File name for cleaned dataset
 CLEANED_FILE = "cleaned_dataset.csv"
 
-
 # ---------------- REQUEST MODEL ----------------
 
 class ChartRequest(BaseModel):
     group_col: str
     value_col: str
     agg: str
+    chart_type: str
 
 
 # ---------------- UPLOAD ROUTE ----------------
 
 @router.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
 
     global global_df
 
@@ -35,6 +46,18 @@ async def upload_file(file: UploadFile = File(...)):
 
     # Save dataframe globally
     global_df = cleaned_df
+
+    
+    history = History(
+        username="demo_user",
+        dataset_name=file.filename,
+        chart_name="Dataset Uploaded",
+        timestamp=str(datetime.now())
+    )
+
+    db.add(history)
+
+    db.commit()
 
     # Save cleaned CSV file
     cleaned_df.to_csv(CLEANED_FILE, index=False)
@@ -80,7 +103,7 @@ async def download_cleaned_dataset():
 # ---------------- CUSTOM CHART ROUTE ----------------
 
 @router.post("/custom-chart")
-async def custom_chart(request: ChartRequest):
+async def custom_chart(request: ChartRequest ,db: Session = Depends(get_db)):
 
     global global_df
 
@@ -108,6 +131,18 @@ async def custom_chart(request: ChartRequest):
             ascending=False
         ).head(10)
 
+        history = History(
+            username="demo_user",
+            dataset_name="Current Dataset",
+            chart_name=f"{request.value_col} vs {request.group_col}",
+            chart_type=request.chart_type,
+            timestamp=str(datetime.now())
+        )
+
+        db.add(history)
+
+        db.commit()
+
         return {
             "labels": result.index.astype(str).tolist(),
             "values": result.values.tolist(),
@@ -116,3 +151,30 @@ async def custom_chart(request: ChartRequest):
 
     except Exception as e:
         return {"error": str(e)}
+    
+
+# ---------------- HISTORY ROUTE ----------------
+
+@router.get("/history")
+async def get_history(
+    db: Session = Depends(get_db)
+):
+
+    history = db.query(History).all()
+
+    result = []
+
+    for item in history:
+
+        result.append({
+
+            "dataset_name": item.dataset_name,
+
+            "chart_name": item.chart_name,
+
+            "chart_type": item.chart_type,
+
+            "timestamp": item.timestamp
+        })
+
+    return result
