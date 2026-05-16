@@ -11,7 +11,7 @@ function DatasetOverview({ data }) {
   const downloadCleaned = async () => {
 
   const response = await fetch(
-    "http://127.0.0.1:8000/download-cleaned"
+    "https://autoinsight-api-ihum.onrender.com/download-cleaned"
   );
 
   const blob = await response.blob();
