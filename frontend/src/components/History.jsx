@@ -8,12 +8,26 @@ function History() {
 
   useEffect(() => {
 
-    fetch(`${API_BASE}/history`)
-      .then((res) => res.json())
-      .then((data) => setHistory(data));
+  const user = JSON.parse(
+    localStorage.getItem("user")
+  );
 
-  }, []);
+  if (!user) return;
 
+  fetch(`${API_BASE}/history/${user.user_id}`)
+    .then((res) => res.json())
+    .then((data) => {
+
+      if (Array.isArray(data)) {
+        setHistory(data);
+      } else {
+        console.error(data);
+        setHistory([]);
+      }
+
+    });
+
+}, []);
   return (
 
     <div className="card">

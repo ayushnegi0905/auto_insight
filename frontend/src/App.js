@@ -32,7 +32,10 @@ function App() {
 
     try {
 
-      const result = await uploadDataset(file);
+      const result = await uploadDataset(
+        file,
+        currentUser.user_id
+      );
 
       setData(result);
       setPage("dashboard");
@@ -54,6 +57,7 @@ function App() {
     try {
 
       const result = await generateCustomChart({
+        user_id: currentUser.user_id,
         group_col: groupCol,
         value_col: valueCol,
         agg,

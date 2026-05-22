@@ -1,4 +1,4 @@
 const API_BASE =
-  "https://autoinsight-api-ihum.onrender.com";
+  "http://127.0.0.1:8000";
 
 export default API_BASE;
