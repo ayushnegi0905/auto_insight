@@ -37,12 +37,15 @@ class History(Base):
         index=True
     )
 
-    username = Column(String)
+    user_id = Column(
+    Integer,
+    ForeignKey("users.id")
+    )
 
     dataset_name = Column(String)
 
     chart_name = Column(String)
 
-    chart_type = (Column(String))
+    chart_type = Column(String)
 
     timestamp = Column(String)

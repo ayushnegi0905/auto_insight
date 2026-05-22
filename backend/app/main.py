@@ -4,8 +4,8 @@ from app.routes import auth
 
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.db.database import engine
-from app.db.models import Base
+from app.db.database import engine,Base
+from app.db import models
 
 Base.metadata.create_all(bind=engine)
 

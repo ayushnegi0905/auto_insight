@@ -10,12 +10,9 @@ BASE_DIR = os.path.dirname(
     )
 )
 
-DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'autoinsight.db')}"
+DATABASE_URL = "postgresql://postgres.zcmhheklwacabswayirj:AyushNegi%40123@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
+engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(
     autocommit=False,

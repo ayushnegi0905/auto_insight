@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, Depends, Form 
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import pandas as pd
@@ -8,7 +8,6 @@ from app.services.cleaning import clean_data
 from app.db.models import History
 from datetime import datetime
 
-from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -25,6 +24,7 @@ CLEANED_FILE = "cleaned_dataset.csv"
 
 class ChartRequest(BaseModel):
     group_col: str
+    user_id: int
     value_col: str
     agg: str
     chart_type: str
@@ -34,6 +34,7 @@ class ChartRequest(BaseModel):
 
 @router.post("/upload")
 async def upload_file(
+    user_id: int = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
@@ -47,11 +48,11 @@ async def upload_file(
     # Save dataframe globally
     global_df = cleaned_df
 
-    
     history = History(
-        username="demo_user",
+        user_id=user_id,
         dataset_name=file.filename,
         chart_name="Dataset Uploaded",
+        chart_type="upload",
         timestamp=str(datetime.now())
     )
 
@@ -132,7 +133,7 @@ async def custom_chart(request: ChartRequest ,db: Session = Depends(get_db)):
         ).head(10)
 
         history = History(
-            username="demo_user",
+            user_id=request.user_id,
             dataset_name="Current Dataset",
             chart_name=f"{request.value_col} vs {request.group_col}",
             chart_type=request.chart_type,
@@ -155,12 +156,15 @@ async def custom_chart(request: ChartRequest ,db: Session = Depends(get_db)):
 
 # ---------------- HISTORY ROUTE ----------------
 
-@router.get("/history")
+@router.get("/history/{user_id}")
 async def get_history(
+    user_id: int,
     db: Session = Depends(get_db)
 ):
 
-    history = db.query(History).all()
+    history = db.query(History).filter(
+        History.user_id == user_id
+    ).all()
 
     result = []
 

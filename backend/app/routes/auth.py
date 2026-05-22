@@ -62,9 +62,10 @@ def register(
     )
 
     db.add(new_user)
-
+    print("BEFORE COMMIT")
     db.commit()
-
+    print("AFTER COMMIT")
+    print(new_user.id)
     db.refresh(new_user)
 
     return {
