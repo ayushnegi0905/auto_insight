@@ -60,10 +60,10 @@ class Dataset(Base):
     Integer,
     primary_key=True,
     index=True
-)
+    )
 
-user_id = Column(Integer)
+    user_id = Column(Integer)
 
-file_name = Column(String)
+    file_name = Column(String)
 
-file_path = Column(String)
+    file_path = Column(String)
