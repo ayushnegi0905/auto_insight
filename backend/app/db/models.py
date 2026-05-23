@@ -38,8 +38,8 @@ class History(Base):
     )
 
     user_id = Column(
-    Integer,
-    ForeignKey("users.id")
+        Integer,
+        ForeignKey("users.id")
     )
 
     dataset_name = Column(String)
@@ -49,3 +49,21 @@ class History(Base):
     chart_type = Column(String)
 
     timestamp = Column(String)
+
+#------------- DATASET TABLE ----------
+
+class Dataset(Base):
+
+    __tablename__ = "datasets"
+
+    id = Column(
+    Integer,
+    primary_key=True,
+    index=True
+)
+
+user_id = Column(Integer)
+
+file_name = Column(String)
+
+file_path = Column(String)

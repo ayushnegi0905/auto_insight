@@ -5,17 +5,23 @@ import pandas as pd
 
 from app.services.cleaning import clean_data
 
-from app.db.models import History
+from app.db.models import History, Dataset 
 from datetime import datetime
 
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 
+import os 
+
 router = APIRouter()
 
-# Store uploaded dataframe globally
-global_df = None
+UPLOAD_DIR = "uploads"
+
+os.makedirs(
+    UPLOAD_DIR,
+    exist_ok=True
+)
 
 # File name for cleaned dataset
 CLEANED_FILE = "cleaned_dataset.csv"
@@ -28,7 +34,7 @@ class ChartRequest(BaseModel):
     value_col: str
     agg: str
     chart_type: str
-
+    dataset_id: int
 
 # ---------------- UPLOAD ROUTE ----------------
 
@@ -39,14 +45,26 @@ async def upload_file(
     db: Session = Depends(get_db)
 ):
 
-    global global_df
+    file_path = f"{UPLOAD_DIR}/{file.filename}"
 
-    df = pd.read_csv(file.file)
+    with open(file_path, "wb") as f:
+        f.write(await file.read())
+
+    df = pd.read_csv(file_path)
 
     cleaned_df, cleaning_report = clean_data(df)
 
-    # Save dataframe globally
-    global_df = cleaned_df
+    dataset = Dataset(
+        user_id=user_id,
+        file_name=file.filename,
+        file_path=file_path
+    )
+
+    db.add(dataset)
+
+    db.commit()
+
+    db.refresh(dataset)
 
     history = History(
         user_id=user_id,
@@ -64,6 +82,8 @@ async def upload_file(
     cleaned_df.to_csv(CLEANED_FILE, index=False)
 
     return {
+        "dataset_id": dataset.id,
+        "filename": file.filename,
         "filename": file.filename,
         "original_rows": len(df),
         "cleaned_rows": len(cleaned_df),
@@ -106,22 +126,30 @@ async def download_cleaned_dataset():
 @router.post("/custom-chart")
 async def custom_chart(request: ChartRequest ,db: Session = Depends(get_db)):
 
-    global global_df
+    dataset = db.query(Dataset).filter(
+    Dataset.id == request.dataset_id,
+    Dataset.user_id == request.user_id
+    ).first()
+
+    if not dataset:
+        return {"error": "Dataset not found"}
+
+    df = pd.read_csv(dataset.file_path)
 
     try:
 
         if request.agg == "sum":
-            result = global_df.groupby(
+            result = df.groupby(
                 request.group_col
             )[request.value_col].sum()
 
         elif request.agg == "avg":
-            result = global_df.groupby(
+            result = df.groupby(
                 request.group_col
             )[request.value_col].mean()
 
         elif request.agg == "count":
-            result = global_df.groupby(
+            result = df.groupby(
                 request.group_col
             )[request.value_col].count()
 
