@@ -1,5 +1,13 @@
-function UploadSection({ file, setFile, handleUpload }) {
+function UploadSection({
+  file,
+  setFile,
+  handleUpload,
+  uploadProgress,
+  loading
+}) {
+
   return (
+
     <div className="upload-card">
 
       <h2 className="upload-title">
@@ -17,28 +25,62 @@ function UploadSection({ file, setFile, handleUpload }) {
           id="fileUpload"
           className="file-input"
           accept=".csv,text/csv,application/vnd.ms-excel"
-          onChange={(e) => setFile(e.target.files[0])}
+          onChange={(e) =>
+            setFile(e.target.files[0])
+          }
         />
 
-        <label htmlFor="fileUpload" className="file-label">
+        <label
+          htmlFor="fileUpload"
+          className="file-label"
+        >
           Choose CSV File
         </label>
 
         {/* Selected File Name */}
         {file && (
+
           <p className="selected-file">
             Selected File: {file.name}
           </p>
+
+        )}
+
+        {/* Progress Bar */}
+        {loading && (
+
+          <div className="progress-wrapper">
+
+            <div
+              className="progress-bar"
+              style={{
+                width: `${uploadProgress}%`
+              }}
+            ></div>
+
+            <p className="progress-text">
+              Uploading...
+              {uploadProgress}%
+            </p>
+
+          </div>
+
         )}
 
         <button
           className="upload-btn"
           onClick={handleUpload}
+          disabled={loading}
         >
-          Upload Dataset
+
+          {loading
+            ? "Uploading..."
+            : "Upload Dataset"}
+
         </button>
 
       </div>
+
     </div>
   );
 }

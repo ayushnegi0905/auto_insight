@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./styles/index.css";
 
 import { UploadSection, DatasetOverview, DataExploration, CustomAnalysis, ChartResult,
-Navbar, Footer, FeatureCards, Login, Register, History } from "./components";
+Navbar, Footer, FeatureCards, Login, Register, History, Spinner } from "./components";
 
 import {uploadDataset, generateCustomChart, } from "./services";
 
@@ -14,7 +14,12 @@ function App() {
   const [data, setData] = useState(null);
   const [page, setPage] = useState("home");
 
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [loading, setLoading] = useState(false);
+
   const [currentUser, setCurrentUser] = useState(JSON.parse(localStorage.getItem("user")));
+
+  const [datasetId, setDatasetId] = useState(null);
 
   const [groupCol, setGroupCol] = useState("");
   const [valueCol, setValueCol] = useState("");
@@ -22,33 +27,53 @@ function App() {
   const [chartType, setChartType] = useState("bar");
 
   const [chartData, setChartData] = useState(null);
+  
+  const [chartLoading, setChartLoading] = useState(false);
 
   const handleUpload = async () => {
 
     if (!file) {
+
       alert("Please select a CSV file first");
+
       return;
     }
 
     try {
 
+      setLoading(true);
+
       const result = await uploadDataset(
         file,
-        currentUser.user_id
+        currentUser.user_id,
+        setUploadProgress
       );
 
+      setDatasetId(result.dataset_id);
+
       setData(result);
+
       setPage("dashboard");
 
       setChartData(null);
+
       setGroupCol("");
+
       setValueCol("");
+
       setAgg("sum");
+
       setChartType("bar");
 
     } catch (error) {
+
       console.log(error);
+
       alert("Upload failed");
+
+    } finally {
+
+      setLoading(false);
     }
   };
 
@@ -56,7 +81,10 @@ function App() {
 
     try {
 
+      setChartLoading(true);
+
       const result = await generateCustomChart({
+        dataset_id: datasetId,
         user_id: currentUser.user_id,
         group_col: groupCol,
         value_col: valueCol,
@@ -67,8 +95,14 @@ function App() {
       setChartData(result);
 
     } catch (error) {
+
       console.log(error);
+
       alert("Chart generation failed");
+
+    } finally {
+
+      setChartLoading(false);
     }
   };
   
@@ -124,6 +158,8 @@ function App() {
               file={file}
               setFile={setFile}
               handleUpload={handleUpload}
+              uploadProgress={uploadProgress}
+              loading={loading}
             />
 
           ) : (
@@ -172,6 +208,7 @@ function App() {
             setAgg={setAgg}
             setChartType={setChartType}
             generateChart={generateChart}
+            chartLoading={chartLoading}        
           />
 
           {/* ChartResult */}

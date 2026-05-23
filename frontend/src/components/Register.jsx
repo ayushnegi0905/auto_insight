@@ -1,86 +1,126 @@
 import { useState } from "react";
 
-function Register({ API_BASE, setPage }) {
+import { Spinner } from "./index";
+
+function Register({
+  API_BASE,
+  setPage
+}) {
 
   const [username, setUsername] = useState("");
 
   const [password, setPassword] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
   const handleRegister = async () => {
 
-    const res = await fetch(
-      `${API_BASE}/register`,
-      {
-        method: "POST",
+    if (!username || !password) {
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+      alert("Please fill all fields");
 
-        body: JSON.stringify({
-          username,
-          password,
-        }),
+      return;
+    }
+
+    try {
+
+      setLoading(true);
+
+      const res = await fetch(
+        `${API_BASE}/register`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+        }
+      );
+
+      const result = await res.json();
+
+      alert(result.message);
+
+      if (
+        result.message ===
+        "User registered successfully"
+      ) {
+
+        setPage("login");
       }
-    );
 
-    const result = await res.json();
+    } catch (error) {
 
-    alert(result.message);
+      console.log(error);
 
-    if (
-      result.message ===
-      "User registered successfully"
-    ) {
-      setPage("login");
+      alert("Registration failed");
+
+    } finally {
+
+      setLoading(false);
     }
   };
 
-return (
+  return (
 
-  <div className="auth-container">
+    <div className="auth-container">
 
-    <div className="auth-card">
+      <div className="auth-card">
 
-      <h2>Register</h2>
+        <h2>Register</h2>
 
-      <input
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) =>
-          setUsername(e.target.value)
-        }
-      />
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) =>
+            setUsername(e.target.value)
+          }
+        />
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) =>
-          setPassword(e.target.value)
-        }
-      />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) =>
+            setPassword(e.target.value)
+          }
+        />
 
-      <div className="auth-buttons">
+        <div className="auth-buttons">
 
-        <button onClick={handleRegister}>
-          Register
-        </button>
+          <button
+            onClick={handleRegister}
+            disabled={loading}
+          >
 
-        <button
-          className="secondary-btn"
-          onClick={() => setPage("login")}
-        >
-          Login
-        </button>
+            {loading
+              ? "Registering..."
+              : "Register"}
+
+          </button>
+
+          <button
+            className="secondary-btn"
+            onClick={() => setPage("login")}
+            disabled={loading}
+          >
+            Login
+          </button>
+
+        </div>
+
+        {loading && <Spinner />}
 
       </div>
 
     </div>
-
-  </div>
-);
+  );
 }
 
 export default Register;

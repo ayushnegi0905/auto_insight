@@ -1,104 +1,129 @@
 import { useState } from "react";
+import { Spinner } from "./index";
 
 function Login({
   API_BASE,
   setPage,
   setCurrentUser,
-}) {
+  }) {
 
-  const [username, setUsername] = useState("");
+    const [username, setUsername] = useState("");
 
-  const [password, setPassword] = useState("");
+    const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
+    const [loading, setLoading] = useState(false);
 
-    
+    const handleLogin = async () => {
+
     if (!username || !password) {
-        alert("Please fill all fields");
-        return;
+
+      alert("Please fill all fields");
+
+      return;
     }
 
-    const res = await fetch(
-      `${API_BASE}/login`,
-      {
-        method: "POST",
+    try {
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+      setLoading(true);
 
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-      }
-    );
+      const res = await fetch(
+        `${API_BASE}/login`,
+        {
+          method: "POST",
 
-    const result = await res.json();
+          headers: {
+            "Content-Type": "application/json",
+          },
 
-    alert(result.message);
-
-    if (
-      result.message ===
-      "Login successful"
-    ) {
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(result)
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+        }
       );
 
-      setCurrentUser(result);
+      const result = await res.json();
 
-      setPage("home");
+      alert(result.message);
+
+      if (
+        result.message ===
+        "Login successful"
+      ) {
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(result)
+        );
+
+        setCurrentUser(result);
+
+        setPage("home");
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert("Login failed");
+
+    } finally {
+
+      setLoading(false);
     }
   };
 
   return (
 
-  <div className="auth-container">
+    <div className="auth-container">
 
-    <div className="auth-card">
+      <div className="auth-card">
 
-      <h2>Login</h2>
+        <h2>Login</h2>
 
-      <input
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) =>
-          setUsername(e.target.value)
-        }
-      />
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) =>
+            setUsername(e.target.value)
+          }
+        />
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) =>
-          setPassword(e.target.value)
-        }
-      />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) =>
+            setPassword(e.target.value)
+          }
+        />
 
-      <div className="auth-buttons">
-
-        <button onClick={handleLogin}>
-          Login
-        </button>
+        <div className="auth-buttons">
 
         <button
-          className="secondary-btn"
-          onClick={() => setPage("home")}
+          onClick={handleLogin}
+          disabled={loading}
         >
-          Back
+          {loading
+            ? "Logging in..."
+            : "Login"}
         </button>
 
+          <button
+            className="secondary-btn"
+            onClick={() => setPage("home")}
+          >
+            Back
+          </button>
+
+        </div>
+        
+        {loading && <Spinner />}
       </div>
 
     </div>
-
-  </div>
-);
+  );
 }
 
 export default Login;

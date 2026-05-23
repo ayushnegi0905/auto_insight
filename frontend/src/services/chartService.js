@@ -1,28 +1,62 @@
 import API_BASE from "../config/api";
 
-export const uploadDataset = async (
+export const uploadDataset = (
   file,
-  userId
+  userId,
+  setUploadProgress
 ) => {
 
-  const formData = new FormData();
+  return new Promise((resolve, reject) => {
 
-  formData.append("file", file);
+    const formData = new FormData();
 
-  formData.append(
-    "user_id",
-    userId
-  );
+    formData.append("file", file);
 
-  const res = await fetch(
-    `${API_BASE}/upload`,
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
+    formData.append(
+      "user_id",
+      userId
+    );
 
-  return await res.json();
+    const xhr = new XMLHttpRequest();
+
+    xhr.open(
+      "POST",
+      `${API_BASE}/upload`
+    );
+
+    xhr.upload.onprogress = (event) => {
+
+      if (event.lengthComputable) {
+
+        const percent = Math.round(
+          (event.loaded * 100) / event.total
+        );
+
+        setUploadProgress(percent);
+      }
+    };
+
+    xhr.onload = () => {
+
+      if (xhr.status === 200) {
+
+        resolve(
+          JSON.parse(xhr.response)
+        );
+
+      } else {
+
+        reject(xhr.response);
+      }
+    };
+
+    xhr.onerror = () => {
+      reject("Upload failed");
+    };
+
+    xhr.send(formData);
+
+  });
 };
 
 export const generateCustomChart = async (

@@ -48,3 +48,24 @@
 .upload-btn {
   padding: 12px 22px;
 }
+
+.progress-wrapper {
+  width: 100%;
+  margin-top: 15px;
+}
+
+.progress-bar {
+  height: 10px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    #6a11cb,
+    #2575fc
+  );
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  margin-top: 8px;
+  font-size: 14px;
+}
