@@ -54,7 +54,7 @@ async def upload_file(
 
         df = pd.read_csv(
             file_path,
-            nrows=1000
+            nrows=5000
         )
 
         cleaned_df, cleaning_report = (
