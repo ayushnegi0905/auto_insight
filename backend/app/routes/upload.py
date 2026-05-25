@@ -50,8 +50,8 @@ async def upload_file(
     with open(file_path, "wb") as f:
         f.write(await file.read())
 
-    df = pd.read_csv(file_path)
-
+    df = pd.read_csv(file_path).copy()
+    df = df.head(5000)
     cleaned_df, cleaning_report = clean_data(df)
 
     dataset = Dataset(
@@ -84,7 +84,6 @@ async def upload_file(
     return {
         "dataset_id": dataset.id,
         "filename": file.filename,
-        "filename": file.filename,
         "original_rows": len(df),
         "cleaned_rows": len(cleaned_df),
         "columns": list(cleaned_df.columns),
@@ -112,8 +111,8 @@ async def upload_file(
 # ---------------- DOWNLOAD CLEANED DATASET ----------------
 
 @router.get("/download-cleaned")
-async def download_cleaned_dataset():
 
+async def download_cleaned_dataset():
     return FileResponse(
         path=CLEANED_FILE,
         filename="cleaned_dataset.csv",
