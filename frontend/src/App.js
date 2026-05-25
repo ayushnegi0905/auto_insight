@@ -67,9 +67,19 @@ function App() {
 
     } catch (error) {
 
-      console.log(error);
+        console.log(error);
+            
+          try {
 
-      alert("Upload failed");
+            const parsed = JSON.parse(error);
+
+            alert(parsed.error);
+
+          } catch {
+
+            alert("Upload failed");
+          }
+        
 
     } finally {
 
