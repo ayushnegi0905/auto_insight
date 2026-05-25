@@ -45,67 +45,110 @@ async def upload_file(
     db: Session = Depends(get_db)
 ):
 
-    file_path = f"{UPLOAD_DIR}/{file.filename}"
+    try:
 
-    with open(file_path, "wb") as f:
-        f.write(await file.read())
+        file_path = f"{UPLOAD_DIR}/{file.filename}"
 
-    df = pd.read_csv(file_path).copy()
-    df = df.head(5000)
-    cleaned_df, cleaning_report = clean_data(df)
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
 
-    dataset = Dataset(
-        user_id=user_id,
-        file_name=file.filename,
-        file_path=file_path
-    )
+        df = pd.read_csv(
+            file_path,
+            nrows=1000
+        )
 
-    db.add(dataset)
+        cleaned_df, cleaning_report = (
+            clean_data(df)
+        )
 
-    db.commit()
+        dataset = Dataset(
+            user_id=user_id,
+            file_name=file.filename,
+            file_path=file_path
+        )
 
-    db.refresh(dataset)
+        db.add(dataset)
 
-    history = History(
-        user_id=user_id,
-        dataset_name=file.filename,
-        chart_name="Dataset Uploaded",
-        chart_type="upload",
-        timestamp=str(datetime.now())
-    )
+        db.commit()
 
-    db.add(history)
+        db.refresh(dataset)
 
-    db.commit()
+        history = History(
+            user_id=user_id,
+            dataset_name=file.filename,
+            chart_name="Dataset Uploaded",
+            chart_type="upload",
+            timestamp=str(datetime.now())
+        )
 
-    # Save cleaned CSV file
-    cleaned_df.to_csv(CLEANED_FILE, index=False)
+        db.add(history)
 
-    return {
-        "dataset_id": dataset.id,
-        "filename": file.filename,
-        "original_rows": len(df),
-        "cleaned_rows": len(cleaned_df),
-        "columns": list(cleaned_df.columns),
+        db.commit()
 
-        "eda": {
-            "head": cleaned_df.head(10).to_dict(orient="records"),
+        cleaned_df.to_csv(
+            CLEANED_FILE,
+            index=False
+        )
 
-            "describe": cleaned_df.describe()
-            .reset_index()
-            .to_dict(orient="records"),
+        numeric_df = cleaned_df.select_dtypes(
+            include="number"
+        )
 
-            "info": {
-                "columns": list(cleaned_df.columns),
+        return {
 
-                "dtypes": cleaned_df.dtypes.astype(str).to_dict(),
+            "dataset_id": dataset.id,
 
-                "non_null": cleaned_df.count().to_dict()
-            }
-        },
+            "filename": file.filename,
 
-        "charts": {}
-    }
+            "original_rows": len(df),
+
+            "cleaned_rows": len(cleaned_df),
+
+            "columns": list(cleaned_df.columns),
+
+            "eda": {
+
+                "head": cleaned_df.head(10)
+                .fillna("")
+                .to_dict(orient="records"),
+
+                "describe": (
+
+                    numeric_df.describe()
+
+                    .fillna("")
+
+                    .reset_index()
+
+                    .to_dict(orient="records")
+
+                ) if not numeric_df.empty else [],
+
+                "info": {
+
+                    "columns": list(
+                        cleaned_df.columns
+                    ),
+
+                    "dtypes": cleaned_df.dtypes
+                    .astype(str)
+                    .to_dict(),
+
+                    "non_null": cleaned_df.count()
+                    .to_dict()
+                }
+            },
+
+            "charts": {}
+        }
+
+    except Exception as e:
+
+        print("UPLOAD ERROR:", str(e))
+
+        return {
+            "error": str(e)
+        }    
 
 
 # ---------------- DOWNLOAD CLEANED DATASET ----------------

@@ -12,7 +12,7 @@ def clean_data(
     outlier_method="iqr",
 ):
 
-    df = df.head.copy()
+    df = df.copy()
 
     report = {
         "initial_shape": df.shape,
