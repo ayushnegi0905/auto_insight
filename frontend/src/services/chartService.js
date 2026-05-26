@@ -32,7 +32,22 @@ export const uploadDataset = (
           (event.loaded * 100) / event.total
         );
 
-        setUploadProgress(percent);
+        let smoothProgress = 0;
+
+        const interval = setInterval(() => {
+
+          smoothProgress += 5;
+
+          if (smoothProgress >= percent) {
+
+            smoothProgress = percent;
+
+            clearInterval(interval);
+          }
+
+          setUploadProgress(smoothProgress);
+
+        }, 50);
       }
     };
 
