@@ -1,7 +1,5 @@
 body {
   transform: scale(0.75);
-  transform-origin: top left;
-  width: 133.33%;
 }
 
 @import "./global.css";
