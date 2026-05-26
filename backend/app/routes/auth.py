@@ -52,8 +52,10 @@ def register(
             "message": "Username already exists"
         }
 
+    safe_password = request.password[:72]
+
     hashed_password = pwd_context.hash(
-        request.password
+        safe_password
     )
 
     new_user = User(
@@ -91,8 +93,10 @@ def login(
             "message": "User not found"
         }
 
+    safe_password = request.password[:72]
+
     valid_password = pwd_context.verify(
-        request.password,
+        safe_password,
         user.password
     )
 
