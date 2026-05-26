@@ -43,6 +43,8 @@ function App() {
 
       setLoading(true);
 
+      setUploadProgress(0);
+
       const result = await uploadDataset(
         file,
         currentUser.user_id,
@@ -67,26 +69,31 @@ function App() {
 
     } catch (error) {
 
-        console.log(error);
-            
-          try {
+      console.log(error);
 
-            const parsed = JSON.parse(error);
+      try {
 
-            alert(parsed.error);
+        const parsed = JSON.parse(error);
 
-          } catch {
+        alert(parsed.error);
 
-            alert("Upload failed");
-          }
-        
+      } catch {
+
+        alert("Upload failed");
+      }
 
     } finally {
 
-      setLoading(false);
+      setTimeout(() => {
+
+        setLoading(false);
+
+        setUploadProgress(0);
+
+      }, 800);
     }
   };
-
+  
   const generateChart = async () => {
 
     try {

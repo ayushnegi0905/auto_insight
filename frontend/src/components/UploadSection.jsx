@@ -47,7 +47,7 @@ function UploadSection({
         )}
 
         {/* Progress Bar */}
-        {loading && (
+        {uploadProgress > 0 && (
 
           <div className="progress-wrapper">
 
