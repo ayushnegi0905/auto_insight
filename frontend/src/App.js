@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./styles/index.css";
 
 import { UploadSection, DatasetOverview, DataExploration, CustomAnalysis, ChartResult,
-Navbar, Footer, FeatureCards, Login, Register, History, Spinner } from "./components";
+Navbar, Footer, FeatureCards, Login, Register, History} from "./components";
 
 import {uploadDataset, generateCustomChart, } from "./services";
 
@@ -93,7 +93,7 @@ function App() {
       }, 800);
     }
   };
-  
+
   const generateChart = async () => {
 
     try {
