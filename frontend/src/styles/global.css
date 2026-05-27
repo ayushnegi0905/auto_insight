@@ -16,7 +16,7 @@ body {
 /* CONTAINER */
 
 .container {
-  width: 90%;
+  width: 75%;
 
   max-width: 1400px;
 
@@ -133,72 +133,6 @@ select:focus {
     0 0 0 4px rgba(37,99,235,0.15);
 }
 
-/* MOBILE RESPONSIVE */
-
-@media (max-width: 768px) {
-
-  .main-title {
-    font-size: 44px;
-  }
-
-  .main-subtitle {
-    font-size: 20px;
-  }
-
-  .upload-card {
-    padding: 25px;
-  }
-
-  .upload-box {
-    flex-direction: column;
-  }
-
-  .overview-grid,
-  .feature-grid,
-  .stats-container,
-  .datatype-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .chart-wrapper {
-    padding: 20px;
-  }
-
-  .chart-title {
-    font-size: 24px;
-  }
-
-  .container {
-    width: 95%;
-    padding: 20px 10px;
-  }
-
-  .navbar {
-    padding: 16px 20px;
-  }
-
-  .navbar h2 {
-    font-size: 24px;
-  }
-
-  table {
-    font-size: 15px;
-  }
-
-  th,
-  td {
-    padding: 10px;
-  }
-
-  button {
-    width: 100%;
-  }
-
-  select {
-    width: 100%;
-  }
-}
-
 /* FOOTER */
 
 .footer {
@@ -206,7 +140,7 @@ select:focus {
 
   background: white;
 
-  padding: 40px 20px;
+  padding: 10px 10px;
 
   text-align: center;
 
@@ -231,7 +165,7 @@ select:focus {
 }
 
 .footer-copy {
-  margin-top: 18px;
+  margin-top: 10px;
 
   font-size: 16px;
 
