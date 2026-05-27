@@ -129,15 +129,15 @@ AutoInsight/
 
 ---
 
-## Login Page
-
-![Login](assets/screenshots/login.png)
-
----
-
 ## Register Page
 
 ![Register](assets/screenshots/register.png)
+
+---
+
+## Login Page
+
+![Login](assets/screenshots/login.png)
 
 ---
 
