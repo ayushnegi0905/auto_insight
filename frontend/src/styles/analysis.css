@@ -24,6 +24,10 @@
   margin-top: 20px;
 }
 
+.datatype-grid:hover {
+  transform: translateY(-4px);
+}
+
 .datatype-card {
   background: white;
   padding: 18px;
