@@ -117,6 +117,8 @@
     0 4px 16px rgba(0,0,0,0.08);
 
   transition: 0.3s;
+  
+  border: 1px solid #2563eb;
 }
 
 .stat-card:hover {
