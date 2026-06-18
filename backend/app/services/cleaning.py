@@ -4,12 +4,7 @@ import numpy as np
 
 def clean_data(
     df,
-    mode="auto",
     remove_duplicates=True,
-    missing_num_strategy="mean",
-    missing_cat_strategy="mode",
-    outlier_handling=False,
-    outlier_method="iqr",
 ):
 
     df = df.copy()
@@ -21,7 +16,6 @@ def clean_data(
         "missing_values_before": {},
         "missing_values_after": {},
         "columns_cleaned": [],
-        "outliers_treated": {},
         "data_types": {},
         "strategies_used": {}
     }
@@ -81,161 +75,68 @@ def clean_data(
             missing_before
         )
 
-        # ---------------- NUMERIC ----------------
-
+        # Numeric Columns
         if pd.api.types.is_numeric_dtype(
             df[col]
         ):
 
-            # AUTO MODE
-            if mode == "auto":
+            try:
 
-                try:
+                skewness = df[col].skew()
 
-                    skewness = df[col].skew()
+            except Exception:
 
-                except Exception:
+                skewness = 0
 
-                    skewness = 0
+            missing_percent = (
+                df[col].isnull().mean()
+            ) * 100
 
-                missing_percent = (
-                    df[col].isnull().mean()
-                ) * 100
+            if missing_percent > 60:
 
-                # many missing values
-                if missing_percent > 60:
+                value = df[col].median()
 
-                    value = df[col].median()
+                strategy_used = (
+                    "median_high_missing"
+                )
 
-                    strategy_used = (
-                        "median_high_missing"
-                    )
+            elif (
+                pd.notnull(skewness)
+                and abs(skewness) > 1
+            ):
 
-                # skewed distribution
-                elif (
-                    pd.notnull(skewness)
-                    and abs(skewness) > 1
-                ):
+                value = df[col].median()
 
-                    value = df[col].median()
+                strategy_used = "median"
 
-                    strategy_used = "median"
-
-                # normal distribution
-                else:
-
-                    value = df[col].mean()
-
-                    strategy_used = "mean"
-
-            # MANUAL MODE
             else:
 
-                if (
-                    missing_num_strategy
-                    == "mean"
-                ):
+                value = df[col].mean()
 
-                    value = df[col].mean()
-
-                    strategy_used = "mean"
-
-                elif (
-                    missing_num_strategy
-                    == "median"
-                ):
-
-                    value = df[col].median()
-
-                    strategy_used = "median"
-
-                elif (
-                    missing_num_strategy
-                    == "zero"
-                ):
-
-                    value = 0
-
-                    strategy_used = "zero"
-
-                else:
-
-                    value = df[col].mean()
-
-                    strategy_used = "mean"
+                strategy_used = "mean"
 
             df[col] = df[col].fillna(
                 value
             )
 
-            report["strategies_used"][col] = (
-                strategy_used
-            )
-
-        # ---------------- DATETIME ----------------
-
-        elif pd.api.types.is_datetime64_any_dtype(
-            df[col]
-        ):
-
-            df[col] = df[col].ffill()
-
-            report["strategies_used"][col] = (
-                "forward_fill"
-            )
-
-        # ---------------- CATEGORICAL ----------------
-
+        # Categorical Columns
         else:
 
-            # AUTO MODE
-            if mode == "auto":
+            mode_value = (
+                df[col].mode()[0]
+                if not df[col].mode().empty
+                else "Unknown"
+            )
 
-                mode_value = (
-                    df[col].mode()[0]
-                    if not df[col].mode().empty
-                    else "Unknown"
-                )
+            df[col] = df[col].fillna(
+                mode_value
+            )
 
-                df[col] = df[col].fillna(
-                    mode_value
-                )
+            strategy_used = "mode"
 
-                report["strategies_used"][col] = (
-                    "mode"
-                )
-
-            # MANUAL MODE
-            else:
-
-                if (
-                    missing_cat_strategy
-                    == "mode"
-                ):
-
-                    mode_value = (
-                        df[col].mode()[0]
-                        if not df[col].mode().empty
-                        else "Unknown"
-                    )
-
-                    df[col] = df[col].fillna(
-                        mode_value
-                    )
-
-                    report["strategies_used"][col] = (
-                        "mode"
-                    )
-
-                else:
-
-                    df[col] = df[col].fillna(
-                        "Unknown"
-                    )
-
-                    report["strategies_used"][col] = (
-                        "unknown"
-                    )
+        report["strategies_used"][col] = (
+            strategy_used
+        )
 
         missing_after = int(
             df[col].isnull().sum()
@@ -248,106 +149,7 @@ def clean_data(
         report["columns_cleaned"].append(col)
 
     # ---------------------------------------------------
-    # 5. OPTIONAL Outlier Handling
-    # ---------------------------------------------------
-
-    # Disabled automatically for large datasets
-    if len(df) > 50000:
-
-        outlier_handling = False
-
-    if outlier_handling:
-
-        numeric_cols = df.select_dtypes(
-            include=np.number
-        ).columns
-
-        for col in numeric_cols:
-
-            # skip low-unique columns
-            if df[col].nunique() < 5:
-
-                continue
-
-            try:
-
-                # ---------- IQR ----------
-
-                if outlier_method == "iqr":
-
-                    Q1 = df[col].quantile(0.25)
-
-                    Q3 = df[col].quantile(0.75)
-
-                    IQR = Q3 - Q1
-
-                    lower = Q1 - 1.5 * IQR
-
-                    upper = Q3 + 1.5 * IQR
-
-                    outliers = (
-                        (df[col] < lower)
-                        |
-                        (df[col] > upper)
-                    ).sum()
-
-                    df[col] = np.where(
-                        df[col] < lower,
-                        lower,
-
-                        np.where(
-                            df[col] > upper,
-                            upper,
-                            df[col]
-                        )
-                    )
-
-                    report["outliers_treated"][
-                        col
-                    ] = int(outliers)
-
-                # ---------- Z-SCORE ----------
-
-                elif outlier_method == "zscore":
-
-                    mean = df[col].mean()
-
-                    std = df[col].std()
-
-                    if std == 0:
-
-                        continue
-
-                    z_scores = (
-                        (df[col] - mean)
-                        / std
-                    )
-
-                    outliers = (
-                        np.abs(z_scores) > 3
-                    ).sum()
-
-                    df[col] = np.where(
-                        z_scores > 3,
-                        mean + 3 * std,
-
-                        np.where(
-                            z_scores < -3,
-                            mean - 3 * std,
-                            df[col]
-                        )
-                    )
-
-                    report["outliers_treated"][
-                        col
-                    ] = int(outliers)
-
-            except Exception:
-
-                continue
-
-    # ---------------------------------------------------
-    # 6. Final Report
+    # 5. Final Report
     # ---------------------------------------------------
 
     report["final_shape"] = df.shape
