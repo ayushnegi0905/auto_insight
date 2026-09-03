@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 
-
 def clean_data(
     df,
     remove_duplicates=True,
@@ -20,9 +19,7 @@ def clean_data(
         "strategies_used": {}
     }
 
-    # ---------------------------------------------------
     # 1. Remove Duplicates
-    # ---------------------------------------------------
 
     if remove_duplicates:
 
@@ -36,15 +33,11 @@ def clean_data(
             before - after
         )
 
-    # ---------------------------------------------------
     # 2. Clean Column Names
-    # ---------------------------------------------------
 
     df.columns = df.columns.str.strip()
 
-    # ---------------------------------------------------
     # 3. Clean String Columns
-    # ---------------------------------------------------
 
     for col in df.select_dtypes(
         include=["object"]
@@ -57,13 +50,22 @@ def clean_data(
         )
 
         df[col] = df[col].replace(
-            ["", " ", "NA", "N/A", "null", "None"],
+            [
+                "",
+                " ",
+                "NA",
+                "N/A",
+                "na",
+                "n/a",
+                "null",
+                "NULL",
+                "None",
+                "none"
+            ],
             np.nan
         )
 
-    # ---------------------------------------------------
     # 4. Handle Missing Values
-    # ---------------------------------------------------
 
     for col in df.columns:
 
@@ -75,32 +77,42 @@ def clean_data(
             missing_before
         )
 
+        # Skip columns with no missing values
+        if missing_before == 0:
+
+            report["missing_values_after"][col] = 0
+
+            report["strategies_used"][col] = (
+                "no_action"
+            )
+
+            continue
+
+        # Handle completely empty columns
+
+        if df[col].dropna().empty:
+
+            report["missing_values_after"][col] = (
+                missing_before
+            )
+
+            report["strategies_used"][col] = (
+                "all_values_missing"
+            )
+
+            report["columns_cleaned"].append(col)
+
+            continue
+
         # Numeric Columns
+
         if pd.api.types.is_numeric_dtype(
             df[col]
         ):
 
-            try:
+            skewness = df[col].skew()
 
-                skewness = df[col].skew()
-
-            except Exception:
-
-                skewness = 0
-
-            missing_percent = (
-                df[col].isnull().mean()
-            ) * 100
-
-            if missing_percent > 60:
-
-                value = df[col].median()
-
-                strategy_used = (
-                    "median_high_missing"
-                )
-
-            elif (
+            if (
                 pd.notnull(skewness)
                 and abs(skewness) > 1
             ):
@@ -115,28 +127,30 @@ def clean_data(
 
                 strategy_used = "mean"
 
-            df[col] = df[col].fillna(
-                value
-            )
-
         # Categorical Columns
+
         else:
 
-            mode_value = (
-                df[col].mode()[0]
-                if not df[col].mode().empty
-                else "Unknown"
-            )
+            mode = df[col].mode()
 
-            df[col] = df[col].fillna(
-                mode_value
-            )
+            if not mode.empty:
 
-            strategy_used = "mode"
+                value = mode.iloc[0]
 
-        report["strategies_used"][col] = (
-            strategy_used
+                strategy_used = "mode"
+
+            else:
+
+                value = "Unknown"
+
+                strategy_used = "Unknown"
+
+        # Fill Missing Values
+        df[col] = df[col].fillna(
+            value
         )
+
+        # Update Report
 
         missing_after = int(
             df[col].isnull().sum()
@@ -146,12 +160,12 @@ def clean_data(
             missing_after
         )
 
-        report["columns_cleaned"].append(col)
+        report["strategies_used"][col] = (
+            strategy_used
+        )
 
-    # ---------------------------------------------------
     # 5. Final Report
-    # ---------------------------------------------------
-
+    
     report["final_shape"] = df.shape
 
     for col in df.columns:
@@ -159,5 +173,4 @@ def clean_data(
         report["data_types"][col] = (
             str(df[col].dtype)
         )
-
     return df, report
